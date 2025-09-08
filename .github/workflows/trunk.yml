@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: psf/black@stable
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: 'pip'
@@ -55,7 +55,7 @@ jobs:
         run: |
           echo version=$(grep -oP '(?<=__version__ = ")[^"]*' src/meshtastic_prometheus_exporter/__about__.py) >> $GITHUB_OUTPUT
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: 'pip'
