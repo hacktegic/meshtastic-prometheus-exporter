@@ -99,13 +99,13 @@ config = {
         "SENTRY_DSN",
         "https://d03452fcb06e7141c5c9a1d6ee370e8d@o4508362511286272.ingest.de.sentry.io/4508362517381200",
     ),
+    "tcp_reconnect_enabled": os.environ.get("TCP_RECONNECT_ENABLED", "1"),
+    "tcp_reconnect_delay": int(os.environ.get("TCP_RECONNECT_DELAY", 5)),
+    "tcp_max_retries": int(os.environ.get("TCP_MAX_RETRIES", 0)),  # 0 = infinite
 }
 
 logger = logging.getLogger("meshtastic_prometheus_exporter")
 logger.propagate = False
-
-# Global state for connection management
-reconnect_required = False
 
 logger.setLevel(getattr(logging, config["log_level"].upper()))
 
@@ -118,6 +118,9 @@ handler.setFormatter(
 )
 
 logger.addHandler(handler)
+
+# Global interface variable for reconnection
+iface = None
 
 try:
     reader = PrometheusMetricReader()
@@ -140,6 +143,33 @@ except Exception as e:
         f"Exception occurred while starting up: {';'.join(traceback.format_exc().splitlines())}"
     )
     sys.exit(1)
+
+
+def create_tcp_interface_with_retry(hostname, port, max_retries=None, retry_delay=5):
+    """Create TCP interface with automatic reconnection"""
+    retries = 0
+    while max_retries is None or retries < max_retries:
+        try:
+            logger.info(
+                f"Attempting to connect to TCP interface at {hostname}:{port} (attempt {retries + 1})"
+            )
+            iface = meshtastic.tcp_interface.TCPInterface(
+                hostname=hostname,
+                portNumber=int(port),
+            )
+            logger.info(f"Successfully connected to TCP interface at {hostname}:{port}")
+            return iface
+        except Exception as e:
+            retries += 1
+            logger.warning(f"Failed to connect to TCP interface: {e}")
+            if max_retries is None or retries < max_retries:
+                logger.info(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                logger.error(f"Failed to connect after {retries} attempts")
+                raise
+
+    raise Exception(f"Failed to connect after {max_retries} attempts")
 
 
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -258,14 +288,10 @@ def on_native_message(packet, interface):
         on_meshtastic_mesh_packet(packet)
     except Exception as e:
         logger.error(
-            f"{e} occurred while processing MeshPacket {packet}, please consider submitting a PR/issue on GitHub: `{json.dumps(packet, default=repr)}` {';'.join(traceback.format_exc().splitlines())
-}"
+            f"{e} occurred while processing MeshPacket {packet}, please consider submitting a PR/issue on GitHub: `{json.dumps(packet, default=repr)}` {';'.join(traceback.format_exc().splitlines())}"
         )
-        try:
-            import sentry_sdk
+        if "sentry_sdk" in globals():
             sentry_sdk.capture_exception(e)
-        except (ImportError, NameError):
-            pass
 
 
 def on_native_connection_established(interface, topic=pub.AUTO_TOPIC):
@@ -273,10 +299,45 @@ def on_native_connection_established(interface, topic=pub.AUTO_TOPIC):
 
 
 def on_native_connection_lost(interface, topic=pub.AUTO_TOPIC):
+    global iface
     logger.warning(f"Lost connection to device over {type(interface).__name__}")
-    # Schedule reconnection attempt
-    global reconnect_required
-    reconnect_required = True
+
+    if (
+        config.get("meshtastic_interface") == "TCP"
+        and config.get("tcp_reconnect_enabled") == "1"
+    ):
+        logger.info("TCP reconnection is enabled, attempting to reconnect...")
+        try:
+            # Close the old interface
+            if iface:
+                try:
+                    iface.close()
+                except:
+                    pass
+
+            # Wait before reconnecting
+            time.sleep(config.get("tcp_reconnect_delay"))
+
+            # Create new interface with retry
+            max_retries = config.get("tcp_max_retries")
+            if max_retries == 0:
+                max_retries = None  # Infinite retries
+
+            iface = create_tcp_interface_with_retry(
+                config.get("interface_tcp_addr"),
+                config.get("interface_tcp_port"),
+                max_retries=max_retries,
+                retry_delay=config.get("tcp_reconnect_delay"),
+            )
+
+            check_and_save_nodedb(iface, cache)
+            logger.info("Successfully reconnected to TCP interface")
+
+        except Exception as e:
+            logger.error(f"Failed to reconnect to TCP interface: {e}")
+            if config.get("tcp_max_retries") > 0:
+                logger.fatal("Maximum reconnection attempts reached, exiting...")
+                sys.exit(1)
 
 
 def check_and_save_nodedb(iface, cache):
@@ -300,50 +361,8 @@ def check_and_save_nodedb(iface, cache):
         )
 
 
-def create_interface():
-    """Create and return a new Meshtastic interface based on configuration"""
-    try:
-        if config.get("meshtastic_interface") == "SERIAL":
-            logger.info("Attempting to connect via SERIAL interface")
-            iface = meshtastic.serial_interface.SerialInterface(
-                devPath=config.get("interface_serial_device")
-            )
-        elif config.get("meshtastic_interface") == "TCP":
-            logger.info(
-                f"Attempting to connect via TCP interface to {config.get('interface_tcp_addr')}:{config.get('interface_tcp_port')}"
-            )
-            iface = meshtastic.tcp_interface.TCPInterface(
-                hostname=config.get("interface_tcp_addr"),
-                portNumber=int(config.get("interface_tcp_port")),
-            )
-        elif config.get("meshtastic_interface") == "BLE":
-            logger.info(
-                f"Attempting to connect via BLE interface to {config.get('interface_ble_addr')}"
-            )
-            iface = meshtastic.ble_interface.BLEInterface(
-                address=config.get("interface_ble_addr"),
-            )
-        else:
-            return None
-
-        check_and_save_nodedb(iface, cache)
-        logger.info(
-            f"Successfully connected to device over {type(iface).__name__}"
-        )
-        return iface
-    except Exception as e:
-        logger.error(
-            f"Failed to create interface: {e}; retrying in 10 seconds..."
-        )
-        return None
-
-
 def main():
-    global reconnect_required
-    reconnect_required = False
-    iface = None
-    last_reconnect_attempt = 0
-    reconnect_delay = 10  # Start with 10 second delay
+    global iface
 
     try:
         logger.info(
@@ -383,7 +402,45 @@ def main():
         )
         pub.subscribe(on_native_connection_lost, "meshtastic.connection.lost")
 
-        if config.get("meshtastic_interface") == "MQTT":
+        if config.get("meshtastic_interface") == "SERIAL":
+            iface = meshtastic.serial_interface.SerialInterface(
+                devPath=config.get("serial_device")
+            )
+            check_and_save_nodedb(iface, cache)
+
+        elif config.get("meshtastic_interface") == "TCP":
+            if config.get("tcp_reconnect_enabled") == "1":
+                logger.info("TCP reconnection is enabled")
+                max_retries = config.get("tcp_max_retries")
+                if max_retries == 0:
+                    logger.info("Infinite reconnection attempts configured")
+                    max_retries = None
+                else:
+                    logger.info(
+                        f"Maximum {max_retries} reconnection attempts configured"
+                    )
+
+                iface = create_tcp_interface_with_retry(
+                    config.get("interface_tcp_addr"),
+                    config.get("interface_tcp_port"),
+                    max_retries=max_retries,
+                    retry_delay=config.get("tcp_reconnect_delay"),
+                )
+            else:
+                logger.info("TCP reconnection is disabled")
+                iface = meshtastic.tcp_interface.TCPInterface(
+                    hostname=config.get("interface_tcp_addr"),
+                    portNumber=int(config.get("interface_tcp_port")),
+                )
+            check_and_save_nodedb(iface, cache)
+
+        elif config.get("meshtastic_interface") == "BLE":
+            iface = meshtastic.ble_interface.BLEInterface(
+                address=config.get("interface_ble_addr"),
+            )
+            check_and_save_nodedb(iface, cache)
+
+        elif config.get("meshtastic_interface") == "MQTT":
             mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
             mqttc.on_connect = on_connect
@@ -404,58 +461,10 @@ def main():
 
             check_and_save_nodedb(object(), cache)
             mqttc.loop_forever()
-        else:
-            # Serial, TCP, or BLE interface with automatic reconnection
-            while True:
-                try:
-                    # Attempt to create interface if not connected or reconnection is required
-                    if iface is None or reconnect_required:
-                        current_time = time.time()
-                        if current_time - last_reconnect_attempt < reconnect_delay:
-                            time.sleep(0.1)
-                            continue
 
-                        iface = create_interface()
-                        if iface is not None:
-                            last_reconnect_attempt = current_time
-                            reconnect_required = False
-                            reconnect_delay = 10  # Reset delay on successful connection
-                        else:
-                            last_reconnect_attempt = current_time
-                            # Exponential backoff with cap at 5 minutes
-                            reconnect_delay = min(reconnect_delay * 1.5, 300)
-                    else:
-                        # Keep the main thread alive while connected
-                        time.sleep(1)
-                except (BrokenPipeError, OSError) as e:
-                    logger.warning(
-                        f"Connection error: {e}. Attempting to reconnect..."
-                    )
-                    reconnect_required = True
-                    if iface:
-                        try:
-                            iface.close()
-                        except Exception as close_err:
-                            logger.debug(f"Error closing interface: {close_err}")
-                        iface = None
-                except Exception as e:
-                    logger.error(
-                        f"Unexpected error in main loop: {e}; {';'.join(traceback.format_exc().splitlines())}"
-                    )
-                    try:
-                        import sentry_sdk
-                        sentry_sdk.capture_exception(e)
-                    except (ImportError, NameError):
-                        pass
-                    time.sleep(reconnect_delay)
+        while True:
+            time.sleep(1)
 
-    except KeyboardInterrupt:
-        logger.info("Received keyboard interrupt, shutting down gracefully")
-        if iface:
-            try:
-                iface.close()
-            except Exception as e:
-                logger.debug(f"Error closing interface: {e}")
     except Exception as e:
         logger.fatal(
             f"Exception occurred while starting up: {';'.join(traceback.format_exc().splitlines())}"
