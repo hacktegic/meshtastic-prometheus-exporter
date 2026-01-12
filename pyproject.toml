@@ -24,7 +24,7 @@ dependencies = [
   "paho-mqtt==2.1.0",
   "cachetools==6.2.4",
   "meshtastic==2.7.5",
-  "Pypubsub==4.0.3",
+  "Pypubsub==4.0.7",
   "sentry-sdk==2.48.0",
 ]
 
