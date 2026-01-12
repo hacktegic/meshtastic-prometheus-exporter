@@ -103,7 +103,7 @@ config = {
 
 logger = logging.getLogger("meshtastic_prometheus_exporter")
 logger.propagate = False
- 
+
 # Global state for connection management
 reconnect_required = False
 logger.setLevel(getattr(logging, config["log_level"].upper()))
@@ -262,6 +262,7 @@ def on_native_message(packet, interface):
         )
         try:
             import sentry_sdk
+
             sentry_sdk.capture_exception(e)
         except Exception:
             pass
@@ -412,7 +413,9 @@ def main():
                         if iface is None:
                             # failed to connect, increase backoff and retry
                             reconnect_delay = min(int(reconnect_delay * 1.5), 300)
-                            logger.info(f"Reconnect failed, next attempt in {reconnect_delay} seconds")
+                            logger.info(
+                                f"Reconnect failed, next attempt in {reconnect_delay} seconds"
+                            )
                             time.sleep(reconnect_delay)
                             continue
                         # success
@@ -432,9 +435,12 @@ def main():
                             pass
                         iface = None
                 except Exception as e:
-                    logger.error(f"Unexpected error in main loop: {e}; {';'.join(traceback.format_exc().splitlines())}")
+                    logger.error(
+                        f"Unexpected error in main loop: {e}; {';'.join(traceback.format_exc().splitlines())}"
+                    )
                     try:
                         import sentry_sdk
+
                         sentry_sdk.capture_exception(e)
                     except Exception:
                         pass
