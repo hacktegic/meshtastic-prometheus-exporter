@@ -117,30 +117,30 @@ jobs:
             ghcr.io/${{ github.repository_owner }}:${{ needs.build.outputs.our-version-major }}
             ghcr.io/${{ github.repository_owner }}:latest
 
-  publish-to-pypi:
-    name: >-
-      Publish 📦 to PyPI
-    if: github.ref == 'refs/heads/main' && needs.test.outputs.version-changed == 'true'
-    needs:
-      - test
-      - build
-    runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/meshtastic-prometheus-exporter
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-    steps:
-      - name: Download all the dists
-        uses: actions/download-artifact@v6
-        with:
-          name: python-package-distributions
-          path: dist/
-      - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist/
-          verbose: true
+  # publish-to-pypi:
+  #   name: >-
+  #     Publish 📦 to PyPI
+  #   if: github.ref == 'refs/heads/main' && needs.test.outputs.version-changed == 'true'
+  #   needs:
+  #     - test
+  #     - build
+  #   runs-on: ubuntu-latest
+  #   environment:
+  #     name: pypi
+  #     url: https://pypi.org/p/meshtastic-prometheus-exporter
+  #   permissions:
+  #     id-token: write  # IMPORTANT: mandatory for trusted publishing
+  #   steps:
+  #     - name: Download all the dists
+  #       uses: actions/download-artifact@v6
+  #       with:
+  #         name: python-package-distributions
+  #         path: dist/
+  #     - name: Publish distribution 📦 to PyPI
+  #       uses: pypa/gh-action-pypi-publish@release/v1
+  #       with:
+  #         packages-dir: dist/
+  #         verbose: true
 
   release:
     name: >-
