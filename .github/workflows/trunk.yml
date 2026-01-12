@@ -1,4 +1,4 @@
-name: build-and-release
+name: trunk
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
     outputs:
       version-changed: ${{ steps.changes.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: psf/black@stable
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -44,7 +44,7 @@ jobs:
       our-version-minor: ${{ steps.our-version-minor.outputs.version }}
       our-version-full: ${{ steps.our-version-full.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - id: our-version-major
         run: |
           echo version=$(grep -oP '(?<=__version__ = ")[^"]*' src/meshtastic_prometheus_exporter/__about__.py | cut -d '.' -f 1) >> $GITHUB_OUTPUT
@@ -67,7 +67,7 @@ jobs:
       - name: Build a binary wheel and a source tarball
         run: hatch build
       - name: Store the distribution packages
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: python-package-distributions
           path: dist/
@@ -84,10 +84,10 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Download all the dists
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: python-package-distributions
           path: dist/
@@ -113,34 +113,34 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           tags: |
-            ghcr.io/${{ github.repository_owner }}/meshtastic-prometheus-exporter:${{ needs.build.outputs.our-version-full }}
-            ghcr.io/${{ github.repository_owner }}/meshtastic-prometheus-exporter:${{ needs.build.outputs.our-version-major }}
-            ghcr.io/${{ github.repository_owner }}/meshtastic-prometheus-exporter:latest
+            ghcr.io/hacktegic/meshtastic-prometheus-exporter:${{ needs.build.outputs.our-version-full }}
+            ghcr.io/hacktegic/meshtastic-prometheus-exporter:${{ needs.build.outputs.our-version-major }}
+            ghcr.io/hacktegic/meshtastic-prometheus-exporter:latest
 
-  # publish-to-pypi:
-  #   name: >-
-  #     Publish 📦 to PyPI
-  #   if: github.ref == 'refs/heads/main' && needs.test.outputs.version-changed == 'true'
-  #   needs:
-  #     - test
-  #     - build
-  #   runs-on: ubuntu-latest
-  #   environment:
-  #     name: pypi
-  #     url: https://pypi.org/p/meshtastic-prometheus-exporter
-  #   permissions:
-  #     id-token: write  # IMPORTANT: mandatory for trusted publishing
-  #   steps:
-  #     - name: Download all the dists
-  #       uses: actions/download-artifact@v6
-  #       with:
-  #         name: python-package-distributions
-  #         path: dist/
-  #     - name: Publish distribution 📦 to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         packages-dir: dist/
-  #         verbose: true
+  publish-to-pypi:
+    name: >-
+      Publish 📦 to PyPI
+    if: github.ref == 'refs/heads/main' && needs.test.outputs.version-changed == 'true'
+    needs:
+      - test
+      - build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/meshtastic-prometheus-exporter
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v7
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          verbose: true
 
   release:
     name: >-
@@ -154,7 +154,7 @@ jobs:
       - build-and-push-image
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: '0'
       - name: Bump version and push tag
