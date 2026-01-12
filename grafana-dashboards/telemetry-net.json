@@ -1,35 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    }
-  ],
-  "__elements": {},
-  "__requires": [
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "10.4.2"
-    },
-    {
-      "type": "datasource",
-      "id": "prometheus",
-      "name": "Prometheus",
-      "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "timeseries",
-      "name": "Time series",
-      "version": ""
-    }
-  ],
   "annotations": {
     "list": [
       {
@@ -51,12 +20,11 @@
   "graphTooltip": 0,
   "id": null,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -71,6 +39,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -87,6 +56,7 @@
               "type": "linear"
             },
             "showPoints": "always",
+            "showValues": false,
             "spanNulls": true,
             "stacking": {
               "group": "A",
@@ -104,7 +74,7 @@
             "steps": [
               {
                 "color": "dark-green",
-                "value": null
+                "value": 0
               }
             ]
           },
@@ -131,15 +101,17 @@
           "sortDesc": false
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -161,7 +133,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -176,6 +148,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -192,6 +165,7 @@
               "type": "linear"
             },
             "showPoints": "always",
+            "showValues": false,
             "spanNulls": true,
             "stacking": {
               "group": "A",
@@ -207,7 +181,7 @@
             "steps": [
               {
                 "color": "dark-green",
-                "value": null
+                "value": 0
               }
             ]
           },
@@ -234,15 +208,17 @@
           "sortDesc": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -264,7 +240,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -279,6 +255,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -295,6 +272,7 @@
               "type": "linear"
             },
             "showPoints": "always",
+            "showValues": false,
             "spanNulls": true,
             "stacking": {
               "group": "A",
@@ -311,7 +289,7 @@
             "steps": [
               {
                 "color": "dark-green",
-                "value": null
+                "value": 0
               }
             ]
           },
@@ -338,15 +316,17 @@
           "sortDesc": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -368,7 +348,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -382,6 +362,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -398,6 +379,7 @@
               "type": "linear"
             },
             "showPoints": "always",
+            "showValues": false,
             "spanNulls": true,
             "stacking": {
               "group": "A",
@@ -413,7 +395,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -447,15 +429,17 @@
           "sortDesc": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -477,7 +461,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -491,6 +475,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -507,6 +492,7 @@
               "type": "linear"
             },
             "showPoints": "always",
+            "showValues": false,
             "spanNulls": true,
             "stacking": {
               "group": "A",
@@ -522,7 +508,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -556,15 +542,17 @@
           "sortDesc": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -586,7 +574,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -601,6 +589,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -617,6 +606,7 @@
               "type": "linear"
             },
             "showPoints": "always",
+            "showValues": false,
             "spanNulls": true,
             "stacking": {
               "group": "A",
@@ -632,7 +622,7 @@
             "steps": [
               {
                 "color": "dark-green",
-                "value": null
+                "value": 0
               }
             ]
           },
@@ -659,15 +649,17 @@
           "sortDesc": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -689,7 +681,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -704,6 +696,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -720,6 +713,7 @@
               "type": "linear"
             },
             "showPoints": "always",
+            "showValues": false,
             "spanNulls": true,
             "stacking": {
               "group": "A",
@@ -735,7 +729,7 @@
             "steps": [
               {
                 "color": "dark-green",
-                "value": null
+                "value": 0
               }
             ]
           },
@@ -762,15 +756,17 @@
           "sortDesc": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -790,14 +786,29 @@
       "type": "timeseries"
     }
   ],
+  "preload": false,
   "refresh": "30s",
-  "schemaVersion": 39,
-  "tags": [],
+  "schemaVersion": 42,
+  "tags": [
+    "meshtastic",
+    "mesh"
+  ],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": true,
+          "text": "Prometheus-Home",
+          "value": "prometheus"
+        },
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "current": {
           "text": [
             "All"
           ],
@@ -807,10 +818,9 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "a7ee7fd2-ee1a-4400-b169-afa1f8c619ed"
+          "uid": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(meshtastic_mesh_packets_total,source_long_name)",
-        "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "source",
@@ -822,7 +832,6 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
         "sort": 5,
         "type": "query"
       }
@@ -836,6 +845,5 @@
   "timezone": "",
   "title": "Meshtastic Telemetry (Net)",
   "uid": "a7ca7097-db42-4515-8bea-d9d2b9d1b116",
-  "version": 45,
-  "weekStart": ""
+  "version": 1
 }
