@@ -22,7 +22,7 @@ dependencies = [
   "opentelemetry-exporter-prometheus==0.57b0",
   "opentelemetry-sdk==1.36.0",
   "paho-mqtt==2.1.0",
-  "cachetools==6.2.4",
+  "cachetools==6.2.5",
   "meshtastic==2.7.6",
   "Pypubsub==4.0.7",
   "sentry-sdk==2.48.0",
