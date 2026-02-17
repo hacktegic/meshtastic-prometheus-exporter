@@ -1,5 +1,8 @@
 import logging
 import time
+import base64
+from meshtastic.protobuf import mesh_pb2
+from google.protobuf.json_format import MessageToDict
 from meshtastic_prometheus_exporter.metrics import *
 import json
 from meshtastic_prometheus_exporter.util import save_node_metadata_in_cache
@@ -8,7 +11,28 @@ logger = logging.getLogger("meshtastic_prometheus_exporter")
 
 
 def on_meshtastic_nodeinfo_app(cache, packet):
-    node_info = packet["decoded"]["user"]
+    # Decode the protobuf payload if it exists
+    # Newer versions of meshtastic library don't automatically decode all packet types
+    if "user" in packet["decoded"]:
+        # Already decoded (legacy behavior from older meshtastic library)
+        node_info = packet["decoded"]["user"]
+    elif "payload" in packet["decoded"]:
+        # Need to decode the base64 payload manually
+        try:
+            payload_bytes = base64.b64decode(packet["decoded"]["payload"])
+            user_msg = mesh_pb2.User()
+            user_msg.ParseFromString(payload_bytes)
+            node_info = MessageToDict(user_msg)
+        except Exception as e:
+            logger.error(
+                f"Failed to decode NODEINFO_APP payload for packet {packet.get('id', 'unknown')}: {e}"
+            )
+            return
+    else:
+        logger.error(
+            f"NODEINFO_APP packet {packet.get('id', 'unknown')} has neither 'user' nor 'payload' field"
+        )
+        return
 
     logger.debug(
         f"Received MeshPacket {packet['id']} with NodeInfo `{json.dumps(node_info, default=repr)}`"

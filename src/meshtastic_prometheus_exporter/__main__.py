@@ -258,7 +258,7 @@ def on_meshtastic_mesh_packet(packet):
 
         if not known_source:
             logger.info(
-                f"NodeInfo is now yet known for Node {source}, ignoring the packet {packet['id']}"
+                f"NodeInfo is not yet known for Node {source}, ignoring the packet {packet['id']}"
             )
             return
 

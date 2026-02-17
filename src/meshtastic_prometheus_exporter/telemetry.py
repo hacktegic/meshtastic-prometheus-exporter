@@ -1,37 +1,62 @@
 import logging
 import json
+import base64
+from meshtastic.protobuf import telemetry_pb2
+from google.protobuf.json_format import MessageToDict
 from meshtastic_prometheus_exporter.metrics import *
 from meshtastic_prometheus_exporter.util import get_decoded_node_metadata_from_cache
 
 logger = logging.getLogger("meshtastic_prometheus_exporter")
 
 
-def on_device_metrics_telemetry(packet, attributes):
-    logger.info(f"MeshPacket {packet['id']} is device metrics telemetry")
-    if "batteryLevel" in packet["decoded"]["telemetry"]["deviceMetrics"]:
+def on_device_metrics_telemetry(telemetry, packet_id, attributes):
+    logger.info(f"MeshPacket {packet_id} is device metrics telemetry")
+    device_metrics = telemetry.get("deviceMetrics", {})
+    if "batteryLevel" in device_metrics:
         meshtastic_telemetry_device_battery_level_percent.set(
-            packet["decoded"]["telemetry"]["deviceMetrics"]["batteryLevel"],
+            device_metrics["batteryLevel"],
             attributes=attributes,
         )
-    if "voltage" in packet["decoded"]["telemetry"]["deviceMetrics"]:
+    if "voltage" in device_metrics:
         meshtastic_telemetry_device_voltage_volts.set(
-            packet["decoded"]["telemetry"]["deviceMetrics"]["voltage"],
+            device_metrics["voltage"],
             attributes=attributes,
         )
-    if "channelUtilization" in packet["decoded"]["telemetry"]["deviceMetrics"]:
+    if "channelUtilization" in device_metrics:
         meshtastic_telemetry_device_channel_utilization_percent.set(
-            packet["decoded"]["telemetry"]["deviceMetrics"]["channelUtilization"],
+            device_metrics["channelUtilization"],
             attributes=attributes,
         )
-    if "airUtilTx" in packet["decoded"]["telemetry"]["deviceMetrics"]:
+    if "airUtilTx" in device_metrics:
         meshtastic_telemetry_device_air_util_tx_percent.set(
-            packet["decoded"]["telemetry"]["deviceMetrics"]["airUtilTx"],
+            device_metrics["airUtilTx"],
             attributes=attributes,
         )
 
 
 def on_meshtastic_telemetry_app(packet, source_long_name, source_short_name):
-    telemetry = packet["decoded"]["telemetry"]
+    # Decode the protobuf payload if it exists
+    # Newer versions of meshtastic library don't automatically decode all packet types
+    if "telemetry" in packet["decoded"]:
+        # Already decoded (legacy behavior)
+        telemetry = packet["decoded"]["telemetry"]
+    elif "payload" in packet["decoded"]:
+        # Need to decode the base64 payload manually
+        try:
+            payload_bytes = base64.b64decode(packet["decoded"]["payload"])
+            telemetry_msg = telemetry_pb2.Telemetry()
+            telemetry_msg.ParseFromString(payload_bytes)
+            telemetry = MessageToDict(telemetry_msg)
+        except Exception as e:
+            logger.error(
+                f"Failed to decode TELEMETRY_APP payload for packet {packet.get('id', 'unknown')}: {e}"
+            )
+            return
+    else:
+        logger.error(
+            f"TELEMETRY_APP packet {packet.get('id', 'unknown')} has neither 'telemetry' nor 'payload' field"
+        )
+        return
     logger.debug(
         f"Received MeshPacket {packet['id']} with Telemetry `{json.dumps(telemetry, default=repr)}`"
     )
@@ -42,7 +67,7 @@ def on_meshtastic_telemetry_app(packet, source_long_name, source_short_name):
         "source_short_name": source_short_name or "unknown",
     }
     if "deviceMetrics" in telemetry:
-        on_device_metrics_telemetry(packet, telemetry_attributes)
+        on_device_metrics_telemetry(telemetry, packet["id"], telemetry_attributes)
         return
 
     if "environmentMetrics" in telemetry:
