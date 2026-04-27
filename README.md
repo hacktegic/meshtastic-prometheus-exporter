@@ -60,8 +60,19 @@ MESHTASTIC_INTERFACE=BLE INTERFACE_BLE_ADDR=AA:BB:CC:DD:EE:FF meshtastic-prometh
 
 1. Connect your Meshtastic device to your computer via a serial interface (e.g., USB).
 2. Clone the repo, or download (preferably) [latest release](https://github.com/artiommocrenco/meshtastic-prometheus-exporter/releases/latest), uncompress it and navigate to the directory with the `docker-compose.yml` file.
-3. Edit the `docker-compose.yml` file and set `MESHTASTIC_INTERFACE` to `SERIAL` and optionally specify the serial device path.
-4. In your terminal, run `docker-compose up` (for this, you need Docker installed).
+3. Edit the `docker-compose.yml` file and set `MESHTASTIC_INTERFACE` to `SERIAL` and optionally specify the serial device path (defaults to /dev/ttyACM0)
+4. Map the serial port through to docker using `devices:`
+5. In your terminal, run `docker-compose up` (for this, you need Docker installed).
+
+Example:
+```yaml
+    environment:
+      - MESHTASTIC_INTERFACE=SERIAL
+      - SERIAL_DEVICE=/dev/ttyUSB0
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+```
+
 
 ### Use with TCP
 
